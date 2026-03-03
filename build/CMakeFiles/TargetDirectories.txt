@@ -1,0 +1,3 @@
+/home/nullora/ls/build/CMakeFiles/ls.dir
+/home/nullora/ls/build/CMakeFiles/edit_cache.dir
+/home/nullora/ls/build/CMakeFiles/rebuild_cache.dir
