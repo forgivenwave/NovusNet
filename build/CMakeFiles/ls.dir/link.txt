@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/ls.dir/src/main.cpp.o CMakeFiles/ls.dir/src/conn.cpp.o -o ls 
