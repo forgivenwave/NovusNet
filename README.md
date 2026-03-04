@@ -2,8 +2,8 @@
 NovusNet is a C++ library that helps programmers setup servers and clients easily, removing the unnecessary hassle of setting it all up manually.
 # Installation
 - Just clone the repo with "git clone ..."
-- Drag and drop the "include/conn.hpp" file into your own include file.
-- Drag and drop the "src/conn.cpp" file into your own src file.
+- Copy the "include/conn.hpp" file into your own include file.
+- Copy the "src/conn.cpp" file into your own src file.
 - Add line **#include"conn.hpp"** at the top of your main.cpp
 # Usage
 - Functions and all can be found in the GitHub Wiki.
