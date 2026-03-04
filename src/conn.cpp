@@ -31,9 +31,40 @@ void runServer(int port) {
         client_fd = accept(server_fd, (sockaddr*)&client_addr, &len);
         if (client_fd < 0) continue;
         std::cout << "CONNECTED:  " << inet_ntoa(client_addr.sin_addr) << "\n";
-        sendMsg("GO FUCK YOURSELF BROTHER!!!");
+        sendMsg("ACCEPTED");
     }
 }
 void sendMsg(std::string msg){
-    send(client_fd, msg.c_str(), msg.size(), 0);
+    int msglength = msg.size();
+    uint32_t msglengthC = htonl(msglength);
+    int bytesL = msglength;
+    int bytesS = 0;
+    send(client_fd,&msglengthC,sizeof(msglengthC),0);
+    while(bytesL>0){
+        int result = send(client_fd,msg.c_str()+bytesS,bytesL,0);
+        if(result<0){
+            perror("send failed");
+            break;
+        }
+        bytesS += result;
+        bytesL -= result;
+    }
+}
+std::string recvMsg(){
+    uint32_t msgL_htonl;
+    recv(client_fd,&msgL_htonl,sizeof(msgL_htonl),0);
+    int msgL = ntohl(msgL_htonl);
+    int bytesR = 0;
+    int bytesL = msgL;
+    std::string msg(msgL, 0);
+    while(bytesL>0){
+        int result = recv(client_fd,msg.data()+bytesR,bytesL,0);
+        if(result<0){
+            perror("recv failed");
+            break;
+        }
+        bytesR += result;
+        bytesL -= result;
+    }
+    return msg;
 }
