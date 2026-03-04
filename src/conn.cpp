@@ -1,8 +1,8 @@
 #include"conn.hpp"
 #include<string>
 #include<sys/socket.h>
-#include <netinet/in.h> // Internet address structures
-#include <arpa/inet.h> // IP address conversion
+#include <netinet/in.h> 
+#include <arpa/inet.h>
 #include <unistd.h>
 #include<cstring>
 #include<iostream>
