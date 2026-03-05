@@ -100,17 +100,21 @@ void sendMsg(std::string msg, int id) {
 
 std::string recvMsg(int id) {
     uint32_t msgL_htonl;
+    int result=0;
     int client = clients[id];  // unused. kept for future use
 
-    recv(id, &msgL_htonl, sizeof(msgL_htonl), 0);
+    result = recv(id, &msgL_htonl, sizeof(msgL_htonl), 0);
+    if (result <= 0) {
+        perror("recv failed");
+        return "EXITED(C-1)";
+    }
     int msgL = ntohl(msgL_htonl);
-
     int bytesR = 0;
     int bytesL = msgL;
     std::string msg(msgL, 0);
 
     while (bytesL > 0) {
-        int result = recv(id, msg.data() + bytesR, bytesL, 0);
+        result = recv(id, msg.data() + bytesR, bytesL, 0);
         if (result <= 0) {
             perror("recv failed");
             return "EXITED(C-1)";
