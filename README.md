@@ -7,8 +7,7 @@ Forget wrestling with raw sockets or drowning in Boost.Asio boilerplate. NovusNe
 - Any connection is not encrypted yet, expose this code to the internet at your own risk.
 - This is still in super early development, expect occasional bugs, and make sure to report said bugs to me.
 - As of right now, NovusNet servers can only handle 1 client at a time, don't expect much.
-## Note
-No Windows support exists yet, this is mainly for Linux systems, I'll add Windows support when the Linux version is truly stable.
+- No Windows support exists yet, this is mainly for Linux systems, I'll add Windows support when the Linux version is truly stable.
 # Why I made this
 Learning sockets as a beginner is rough. The setup is long, 
 the errors are annoying, and even once you get it, you still have 
