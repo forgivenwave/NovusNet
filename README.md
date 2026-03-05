@@ -1,5 +1,5 @@
 # NovusNet
-NovusNet is a C++ library that helps programmers setup servers and clients easily, removing the unnecessary hassle of setting it all up manually.
+NovusNet is a C++ library that helps programmers setup and manage servers and clients easily, removing the unnecessary hassle of setting it all up manually.
 # Installation
 - Just clone the repo with "git clone ..."
 - Copy the "include/nn.hpp" file into your own include file.
@@ -24,7 +24,7 @@ target_include_directories(PROJECTNAME PRIVATE include)
 #include <chrono>
 int main(){
     runServer(9090);
-    //chrono so loop dosen't tank CPU usage
+    //chrono so loop doesn't tank CPU usage
     while(!clientConnected){
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }

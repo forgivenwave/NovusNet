@@ -1,7 +1,5 @@
 #include"nn.hpp"
 #include<iostream>
-#include<string>
-#include <thread>
 #include <chrono>
 int main(){
     runServer(9090);
