@@ -7,6 +7,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_executable(ls
     src/main.cpp
-    src/conn.cpp
+    src/nn.cpp
 )
+add_executable(cl
+    src/client.cpp
+    src/nn.cpp
+)
+
 target_include_directories(ls PRIVATE include)
+target_include_directories(cl PRIVATE include)
