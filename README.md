@@ -1,3 +1,4 @@
+![CMake Build](https://github.com/Nullora/NovusNet/actions/workflows/cmake-single-platform.yml/badge.svg)
 # NovusNet
 NovusNet is a C++ library that helps programmers setup and manage servers and clients easily, removing the unnecessary hassle of setting it all up manually.
 # Installation
