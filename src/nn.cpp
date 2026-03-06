@@ -11,10 +11,10 @@
 
 // global state
 int client_fd;                   // most recently connected client fd
-std::map<int, int> clients;      // all clients
+std::map<int, CL> clients;      // all clients
 bool clientConnected = false;    // least one client is connected
 int clients_index = 0;           // incremented with each new connection
-
+CL client;
 // spawns a background thread that accepts incoming connections.
 // each accepted client gets their own recv thread.
 void runServer(int port) {
@@ -42,9 +42,11 @@ void runServer(int port) {
 
             // Register the new client
             clients_index++;
-            clients[clients_index] = client_fd;
+            client.clientFD = client_fd;
+            clients[clients_index] = client;
             std::cout << "CONNECTED: " << inet_ntoa(client_addr.sin_addr) << "\n";
             clientConnected = true;
+            
 
             // Capture fd by value so it's stable even if client_fd changes
             int new_fd = client_fd;
@@ -52,8 +54,8 @@ void runServer(int port) {
                 // Loop until client disconnects (recvMsg returns empty on disconnect)
                 while (true) {
                     std::string msg = recvMsg(new_fd);
-                    if (msg=="EXITED(C-1)") break;
-                    std::cout << msg << '\n';
+                    if (msg=="EXITED(C-178)") break;
+                    
                 }
             }).detach();
         }
@@ -104,12 +106,11 @@ void sendMsg(std::string msg, int id) {
 std::string recvMsg(int id) {
     uint32_t msgL_htonl;
     int result=0;
-    int client = clients[id];  // unused. kept for future use
 
     result = recv(id, &msgL_htonl, sizeof(msgL_htonl), 0);
     if (result <= 0) {
         perror("recv failed");
-        return "EXITED(C-1)";
+        return "EXITED(C-178)";
     }
     int msgL = ntohl(msgL_htonl);
     int bytesR = 0;

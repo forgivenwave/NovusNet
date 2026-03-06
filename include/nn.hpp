@@ -4,7 +4,11 @@
 extern int client_fd;
 extern bool clientConnected;
 //Initialization
-
+struct CL{
+public:
+    int clientFD;
+    std::string msg;
+};
 //Connecting
 void runServer(int port);
 int runClient(std::string ip, int port);
