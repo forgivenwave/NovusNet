@@ -2,15 +2,15 @@
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Platform](https://img.shields.io/badge/platform-Linux-pink)
 # NovusNet
-Ever manually set up a project that required networking on your own? You know how hard it is, thats why i'm introducing NovusNet. NN gets a server and client talking in less than 10 lines of code. Built for for indie devs, beginners, and anyone who's project doesn't need the overkill and complexity that larger libraries like Boost.Asio bring.
+Ever manually set up a project that required networking on your own? You know how hard it is, thats why i'm introducing NovusNet. NN gets a server and client talking in less than 10 lines of code. Built for for indie devs, beginners, and anyone who's project doesn't need the overkill and complexity that larger libraries like Boost.Asio bring. Fully encrypted communication between server and clients.
 # WARNING
-- Any connection is not encrypted yet, expose this code to the internet at your own risk.
+- Although encryption is now added, using it requires an openssl key, I'll add a script to run the commands for you so you get your key.
 - This is still in super early development, expect occasional bugs, and make sure to report said bugs to me.
 - No Windows support exists yet, this is mainly for Linux systems, I'll add Windows support when the Linux version is truly stable.
 # Why I made this
 Learning sockets as a beginner is rough. The setup is long, 
 the errors are annoying, and even once you get it, you still have 
-to do it all over again every new project.
+to do it all over again every new project. And to truly secure it, encrypting messages is hell.
 
 NovusNet exists so you don't have to do any of that. Whether you're just starting 
 out with networking or you're an experienced dev who doesn't want 
@@ -27,12 +27,14 @@ setup and the later communication, so you can focus on actually shipping your pr
 
 int main(){
     runServer(9090);
+    //"onMessage" returns clientNumber and msg of any received message from any client.
+    onMessage([](int clientN, std::string msg){
+        //more detailed logic can go on here depending on what you wanna do.
+        std::cout << "Client " << clientN << ": " << msg << "\n";
+    });
+    //Chrono so it does no tank cpu usage and doesn't let main() return anything
     while(true){
-        //"onMessage" returns clientFD and msg of any received message from any client.
-        onMessage([](int clientFD, std::string msg){
-            //more detailed logic can go on here depending on what you wanna do.
-            std::cout << "Client " << clientFD << ": " << msg << "\n";
-        });
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
 ```
@@ -45,10 +47,14 @@ int main(){
     std::string msg;
     //runClient(ip,port) connects to a server
     int client = runClient("127.0.0.1", 9090);
+    //receive client id and assign it for later use
+    msg = recvMsg(client);
+    int clientFD = std::stoi(msg);
+    std::cout<<clientFD<<'\n';
     while(true){
         std::getline(std::cin,msg);
         //sendMsg(string msg) sends data as a string
-        sendMsg(msg,client);
+        sendMsg(msg,1);
     }
     return 0;
 }
@@ -68,4 +74,6 @@ add_executable(PROJECTNAME
     src/nn.cpp
 )
 target_include_directories(PROJECTNAME PRIVATE include)
+find_package(OpenSSL REQUIRED)
+target_link_libraries(PROJECTNAME OpenSSL::SSL OpenSSL::Crypto)
 ```
