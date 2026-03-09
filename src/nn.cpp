@@ -11,8 +11,8 @@
 #include <netinet/tcp.h>
 
 int client_fd;                   // most recently connected client fd
-std::map<int, int> clients;      // all clients
-int clients_index = 0;           // incremented with each new connection
+std::map<int, int> clients;      // list containing all clients
+int clients_index = 0;     
 std::function<void(int, std::string)> messageCallback;
 
 void onMessage(std::function<void(int, std::string)> callback){
@@ -44,7 +44,7 @@ void runServer(int port) {
             client_fd = accept(server_fd, (sockaddr*)&client_addr, &len);
             if (client_fd < 0) continue;
 
-            // register the new client
+            // register new client
             clients_index++;
             clients[clients_index] = client_fd;
             std::cout << "CONNECTED: " << inet_ntoa(client_addr.sin_addr) << "\n";
