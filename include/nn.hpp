@@ -2,6 +2,9 @@
 #include <thread>
 #include<string>
 #include <functional>
+#include <map>
+#include <openssl/ssl.h>
+extern std::map<int, SSL*> clients; 
 //Initialization
 void onMessage(std::function<void(int, std::string)> callback);
 //Connecting
