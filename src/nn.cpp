@@ -9,19 +9,28 @@
 #include <cstring>
 #include <iostream>
 #include <netinet/tcp.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 
 int client_fd;                   // most recently connected client fd
-std::map<int, int> clients;      // list containing all clients
-int clients_index = 0;     
+std::map<int, SSL*> clients;      // all clients
+int clients_index = 0;           // incremented with each new connection
 std::function<void(int, std::string)> messageCallback;
+SSL_CTX* ssl_ctx = nullptr;
+SSL* client_ssl = nullptr;
 
 void onMessage(std::function<void(int, std::string)> callback){
     messageCallback = callback;
 }
 
-// spawns a background thread that accepts incoming connections
+// spawns a background thread that accepts incoming connections.
 // each accepted client gets their own recv thread.
 void runServer(int port) {
+    // initialize OpenSSL and load certificates
+    SSL_CTX* ctx = SSL_CTX_new(TLS_server_method());
+    SSL_CTX_use_certificate_file(ctx, "cert.pem", SSL_FILETYPE_PEM);
+    SSL_CTX_use_PrivateKey_file(ctx, "key.pem", SSL_FILETYPE_PEM);
+    ssl_ctx = ctx;
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     int opt = 1;
     setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -43,15 +52,21 @@ void runServer(int port) {
             // block until a new client connects
             client_fd = accept(server_fd, (sockaddr*)&client_addr, &len);
             if (client_fd < 0) continue;
-
-            // register new client
+            //wrap fd in ssl
+            SSL* ssl = SSL_new(ssl_ctx);
+            SSL_set_fd(ssl, client_fd);
+            if (SSL_accept(ssl) <= 0) {
+                ERR_print_errors_fp(stderr);
+                continue;
+            }
+            // register the new client
             clients_index++;
-            clients[clients_index] = client_fd;
+            clients[clients_index] = ssl;
             std::cout << "CONNECTED: " << inet_ntoa(client_addr.sin_addr) << "\n";
             
-            sendMsg(std::to_string(clients_index),client_fd);
+            sendMsg(std::to_string(clients_index),clients_index);
             // stabilize client_fd to pass to thread
-            int new_fd = client_fd;
+            int new_fd = clients_index;
             std::thread([new_fd]() {
                 while (true) {
                     std::string msg = recvMsg(new_fd);
@@ -76,6 +91,15 @@ int runClient(std::string ip, int port) {
         perror("connect failed");
         return -1;
     }
+    SSL_CTX* client_ctx = SSL_CTX_new(TLS_client_method());
+    SSL* ssl = SSL_new(client_ctx);
+    SSL_set_fd(ssl, client);
+    SSL_CTX_set_verify(client_ctx, SSL_VERIFY_NONE, nullptr);
+    if (SSL_connect(ssl) <= 0) {
+        ERR_print_errors_fp(stderr);
+        return -1;
+    }
+    client_ssl = ssl;
 
     std::cout << "Connection success\n";
     return client;
@@ -83,18 +107,19 @@ int runClient(std::string ip, int port) {
 
 
 void sendMsg(std::string msg, int id) {
+    SSL* ssl = (clients.count(id)) ? clients[id] : client_ssl;
     int msglength = msg.size();
     uint32_t msglengthC = htonl(msglength); 
     int bytesL = msglength;
     int bytesS = 0;
     int result=0;
 
-    result = send(id, &msglengthC, sizeof(msglengthC), 0);
+    result = SSL_write(ssl, &msglengthC, sizeof(msglengthC));
     if (result < 0) {
         perror("send failed");
     }
     while (bytesL > 0) {
-        result = send(id, msg.c_str() + bytesS, bytesL, 0);
+        result = SSL_write(ssl, msg.c_str() + bytesS, bytesL);
         if (result < 0) {
             perror("send failed");
             break;
@@ -105,10 +130,11 @@ void sendMsg(std::string msg, int id) {
 }
 
 std::string recvMsg(int id) {
+    SSL* ssl = (clients.count(id)) ? clients[id] : client_ssl;
     uint32_t msgL_htonl;
     int result=0;
 
-    result = recv(id, &msgL_htonl, sizeof(msgL_htonl), 0);
+    result = SSL_read(ssl, &msgL_htonl, sizeof(msgL_htonl));
     if (result <= 0) {
         perror("recv failed");
         return "EXITED(C-178)";
@@ -119,7 +145,7 @@ std::string recvMsg(int id) {
     std::string msg(msgL, 0);   
 
     while (bytesL > 0) {
-        result = recv(id, msg.data() + bytesR, bytesL, 0);
+        result = SSL_read(ssl, msg.data() + bytesR, bytesL);
         if (result <= 0) {
             perror("recv failed");
             return "EXITED(C-1)";

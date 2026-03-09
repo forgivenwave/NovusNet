@@ -12,7 +12,7 @@ int main(){
     while(true){
         std::getline(std::cin,msg);
         //sendMsg(string msg) sends data as a string
-        sendMsg(msg,client);
+        sendMsg(msg,1);
     }
     return 0;
 }

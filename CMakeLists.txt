@@ -16,3 +16,6 @@ add_executable(cl
 
 target_include_directories(ls PRIVATE include)
 target_include_directories(cl PRIVATE include)
+find_package(OpenSSL REQUIRED)
+target_link_libraries(ls OpenSSL::SSL OpenSSL::Crypto)
+target_link_libraries(cl OpenSSL::SSL OpenSSL::Crypto)
