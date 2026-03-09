@@ -19,6 +19,7 @@ to write boilerplate over and over, NovusNet handles the
 setup and the later communication, so you can focus on actually shipping your product.
 
 # Code examples
+- An actual example project can be found at [NovusChat](https://github.com/Nullora/NovusChat)
 ## Server
 
 ```cpp
@@ -78,3 +79,4 @@ target_include_directories(PROJECTNAME PRIVATE include)
 find_package(OpenSSL REQUIRED)
 target_link_libraries(PROJECTNAME OpenSSL::SSL OpenSSL::Crypto)
 ```
+- Compile and check if it works, sometimes code editors highight the **#include"nn.hpp"** in red, so check incase it's a real error instead of the usual false alarm.
