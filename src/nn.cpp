@@ -19,7 +19,7 @@ void onMessage(std::function<void(int, std::string)> callback){
     messageCallback = callback;
 }
 
-// spawns a background thread that accepts incoming connections.
+// spawns a background thread that accepts incoming connections
 // each accepted client gets their own recv thread.
 void runServer(int port) {
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
