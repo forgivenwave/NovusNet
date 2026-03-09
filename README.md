@@ -5,7 +5,6 @@
 Ever manually set up a project that required networking on your own? You know how hard it is, thats why i'm introducing NovusNet. NN gets a server and client talking in less than 10 lines of code. Built for for indie devs, beginners, and anyone who's project doesn't need the overkill and complexity that larger libraries like Boost.Asio bring. Fully encrypted communication between server and clients.
 # WARNING
 - Although encryption is now added, using it requires an openssl key, I'll add a script to run the commands for you so you get your key.
-- Encryption is not fully tested yet, give it about a month before its stable.
 - This is still in super early development, expect occasional bugs, and make sure to report said bugs to me.
 - No Windows support exists yet, this is mainly for Linux systems, I'll add Windows support when the Linux version is truly stable.
 # Why I made this
@@ -80,3 +79,5 @@ find_package(OpenSSL REQUIRED)
 target_link_libraries(PROJECTNAME OpenSSL::SSL OpenSSL::Crypto)
 ```
 - Compile and check if it works, sometimes code editors highight the **#include"nn.hpp"** in red, so check incase it's a real error instead of the usual false alarm.
+# Updates
+- Encryption is now fully working as intended. make sure to have the key.pem and cert.pem in your build folder when you run the library
