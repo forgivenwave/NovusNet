@@ -30,8 +30,8 @@ Check **Documentation.md**, it has a detailed explanation of each function, and 
 #include <chrono>
 
 int main(){
-    //runServer takes port number only: runServer(int port)
-    runServer(9090);
+    //runServer takes port number and the password for your server: runServer(int port, string password)
+    runServer(9090, "YOUR_PASSWORD");
     //"onMessage" returns clientNumber and msg of any received message from any client.
     onMessage([](int clientN, std::string msg){
         //more detailed logic can go on here depending on what you wanna do.
@@ -50,22 +50,22 @@ int main(){
 
 int main(){
     std::string msg;
-    //runClient(ip,port) connects to a server and returns an int used to address the server
-    int client = runClient("127.0.0.1", 9090);
-    //receive client id and assign it for later use
+    //runClient(ip,port,password) connects to a server
+    int client = runClient("127.0.0.1", 9090,"YOUR_PASSWORD");
+    //receive client id and assign it for later use (Needed for proper communication)
     msg = recvMsg(client);
-    int clientFD = std::stoi(msg);
-    std::cout<<clientFD<<'\n';
+    int clientID = std::stoi(msg);
     while(true){
         std::getline(std::cin,msg);
         //sendMsg(string msg) sends data as a string
-        sendMsg(msg,1);
+        sendMsg(msg,clientID);
     }
     return 0;
 }
 ```
 
  - These same snippets can be found at **src/client.cpp** and **src/server.cpp**
+ - For a clearer example check [NovusChat](https://github.com/Nullora/NovusChat) as mentioned earlier, it's a much better way of understanding.
  # Installation
 - Just clone the repo with "git clone ..."
 - Copy the "include/nn.hpp" file into your own include file.
