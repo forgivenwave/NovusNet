@@ -14,7 +14,7 @@
 
 int client_fd;                   // most recently connected client fd
 std::map<int, SSL*> clients;      // all clients
-int clients_index = 0;           // incremented with each new connection
+int clients_index = 0;           // 
 std::function<void(int, std::string)> messageCallback;
 SSL_CTX* ssl_ctx = nullptr;
 SSL* client_ssl = nullptr;
