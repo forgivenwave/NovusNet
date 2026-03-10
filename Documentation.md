@@ -9,10 +9,10 @@ onMessage([](int ClientID, std::string msg){
   std::cout<<ClientID<<' '<<msg<<endl;
 });
 
-// This is how you start your server, pick the port amd the password that each client needs to connect.
+// This is how you start your server. pick the port and the password that each client needs to connect.
 runServer(int port, std::string password);
 
-// This function connects to a server, the ip, port, and password has to match the server's.
+// This function connects to a server. the ip, port, and password has to match the server's.
 // It returns a file descriptor.
 runClient(std::string ip, int port, std::string password);
 
@@ -27,5 +27,5 @@ sendMsg(std::string msg, int id);
 recvMsg(int id)
 ```
 ## Note
-- If you found any bugs, please let me know. Open a discussion in "Issues" or send me a private email and I'll happily fix it!
+- For much a clearer example, go to [NovusChat](https://github.com/Nullora/NovusChat). It's made purely in C++ and NovusNet, it's regularly updated to match the librarie's updates.
 
