@@ -84,7 +84,7 @@ target_link_libraries(PROJECTNAME OpenSSL::SSL OpenSSL::Crypto)
 ```
 - Compile and check if it works, sometimes code editors highight the **#include"nn.hpp"** in red, so check incase it's a real error instead of the usual false alarm.
 # Updates
-- 9/3/26: Encryption is now fully working as intended. make sure to have the key.pem and cert.pem in your build folder when you run your server.
 - 10/3/26: Access Control is now added, just assign the password as shown in Documentation.md and no one but you and the password holders can join (Don't share your password on accident!) I'll add encryption for the passwords too because stored in plain text is a bit unsafe, but it works for now.
+- 9/3/26: Encryption is now fully working as intended. make sure to have the key.pem and cert.pem in your build folder when you run your server.
 
 **Made by Mehdi B.R (Nullora @ Novus)**
