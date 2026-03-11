@@ -14,3 +14,7 @@ int runClient(std::string ip, int port,std::string password);
 //After connection
 void sendMsg(std::string msg, int id);
 std::string recvMsg(int id);
+
+//NFTP
+std::string recvMsg(int id);
+void recvFile(std::string filepath, int id);
