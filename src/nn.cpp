@@ -179,6 +179,7 @@ std::string recvMsg(int id) {
 //NFTP
 bool sendFile(const char* filepath, int id){
     SSL* ssl = (clients.count(id)) ? clients[id] : client_ssl;
+    std::string filepathSTR = filepath;
     char buffer[16384];
     int fd = open(filepath,O_RDONLY);
     if(fd<0) return false;
@@ -186,15 +187,21 @@ bool sendFile(const char* filepath, int id){
     fstat(fd,&st);
     uint64_t size = st.st_size;
     uint64_t netsize = htobe64(size);
-    std::string netsizeStr = std::to_string(netsize);
-    sendMsg(netsizeStr, id);
-    int bytesL = size;
-    int bytesS = 0;
+    SSL_write(ssl,&netsize,sizeof(netsize));
+    std::string filename = filepathSTR.substr(filepathSTR.find_last_of("/\\") + 1);
+    sendMsg(filename,id);
+    uint64_t bytesL = size;
+    uint64_t bytesS = 0;
+    int s=0;
     int result=0;
     while(bytesL>0){
         result = read(fd,buffer,sizeof(buffer));
-        bytesS += SSL_write(ssl,buffer,bytesL);
-
+        if(result<0) return false;
+        s = SSL_write(ssl,buffer,result);
+        bytesS += s;
+        bytesL -= s;
     }
 }
-bool recvFile(std::string folderpath, int id);
+bool recvFile(std::string folderpath, int id){
+    
+}
