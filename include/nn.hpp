@@ -16,5 +16,5 @@ void sendMsg(std::string msg, int id);
 std::string recvMsg(int id);
 
 //NFTP
-std::string recvMsg(int id);
-void recvFile(std::string filepath, int id);
+void sendFile(std::string filepath, int id);
+void recvFile(std::string folderpath, int id);
