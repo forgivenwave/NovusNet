@@ -8,7 +8,6 @@ int main(){
     //receive client id and assign it for later use
     msg = recvMsg(client);
     int clientID = std::stoi(msg);
-    if(!sendFile("/home/nullora/ls/test.txt",clientID)) std::cout<<"Send Failed\n";
     while(true){
         std::getline(std::cin,msg);
         //sendMsg(string msg) sends data as a string
