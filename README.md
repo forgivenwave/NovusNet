@@ -3,6 +3,7 @@
 ![Platform](https://img.shields.io/badge/platform-Linux-pink)
 # NovusNet
 Ever manually set up a project that required networking on your own? You know how hard it is, thats why i'm introducing NovusNet. NN gets a server and client talking in less than 10 lines of code. Built for indie devs, beginners, and anyone who's project doesn't need the overkill and complexity that larger libraries like Boost.Asio bring. Fully encrypted communication between server and clients.
+Now featuring NFTP (Novus File Transfer Protocol); send and receive files of any size with a single function call. Scroll down to updates for more.
 # WARNING
 - As this is an ongoing project, scroll down to "Updates" to keep up to date, syntax may change in a short period.
 - This is still in super early development, expect occasional bugs, and make sure to report said bugs to me.
@@ -86,7 +87,8 @@ target_link_libraries(PROJECTNAME OpenSSL::SSL OpenSSL::Crypto)
 - Run command: **chmod +x gen.sh** (Initialize script)
 - Run command: **./gen.sh** (Run script to install keys for you)
 # Updates
-- 10/3/26: Access Control is now added, just assign the password as shown in Documentation.md and no one but you and the password holders can join (Don't share your password on accident!) I'll add encryption for the passwords too because stored in plain text is a bit unsafe, but it works for now.
+- 12/3/26: Added file sending/receiving, no size limit. Called NFTP (Novus File Transfer Protocol). Check documentation for correct usage.
+- 10/3/26: Access Control is now added, just assign the password as shown in Documentation.md and no one but you and the password holders can join (Don't share your password on accident!) I'll add encryption for the passwords too because stored in plain text is a bit awkward, but it works for now.
 - 9/3/26: Encryption is now fully working as intended. make sure to have the key.pem and cert.pem in your build folder when you run your server.
 
 **Made by Mehdi B.R (Nullora @ Novus)**
