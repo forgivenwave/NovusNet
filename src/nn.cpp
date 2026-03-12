@@ -84,12 +84,21 @@ void runServer(int port, std::string password) {
                 std::cout << "CONNECTED: " << inet_ntoa(client_addr.sin_addr) << "\n";
                 sendMsg(std::to_string(clients_index),clients_index);
                 // stabilize client_index to pass to thread
-                int new_fd = clients_index;
-                std::thread([new_fd]() {
+                int new_ci = clients_index;
+                int new_fd = client_fd;
+                SSL* new_ssl = ssl;
+                std::thread([new_ci,new_ssl,new_fd]() {
                     while (true) {
-                        std::string msg = recvMsg(new_fd);
-                        if (msg=="EXITED(C-178)") break;
-                        if (messageCallback) messageCallback(new_fd, msg);
+                        std::string msg = recvMsg(new_ci);
+                        if (msg=="EXITED(C-178)"){
+                            std::cout<<"client "<<new_ci<<" disconnected, cleaning.\n";
+                            SSL_shutdown(clients[new_ci]);
+                            SSL_free(clients[new_ci]);
+                            close(new_fd);
+                            clients.erase(new_ci);
+                            break;
+                        }
+                        if (messageCallback) messageCallback(new_ci, msg);
                     }
                 }).detach();
             }
