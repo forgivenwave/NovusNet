@@ -27,7 +27,6 @@ SSL* client_ssl = nullptr;
 void onMessage(std::function<void(int, std::string)> callback){
     messageCallback = callback;
 }
-
 // spawns a background thread that accepts incoming connections.
 // each accepted client gets their own recv thread.
 void runServer(int port, std::string password) {
@@ -104,8 +103,6 @@ void runServer(int port, std::string password) {
         }
     }).detach();
 }
-
-
 int runClient(std::string ip, int port,std::string password) {
     int client = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -131,8 +128,6 @@ int runClient(std::string ip, int port,std::string password) {
     std::cout << "Request sent\n";
     return client;
 }
-
-
 void sendMsg(std::string msg, int id) {
     SSL* ssl = (clients.count(id)) ? clients[id] : client_ssl;
     int msglength = msg.size();
@@ -155,7 +150,6 @@ void sendMsg(std::string msg, int id) {
         bytesL -= result;
     }
 }
-
 std::string recvMsg(int id) {
     SSL* ssl = (clients.count(id)) ? clients[id] : client_ssl;
     uint32_t msgL_htonl;
@@ -180,7 +174,6 @@ std::string recvMsg(int id) {
         bytesR += result;
         bytesL -= result;
     }
-
     return msg;
 }
 
