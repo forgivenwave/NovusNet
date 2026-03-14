@@ -16,8 +16,8 @@
 #include <netinet/tcp.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
-#include <fcntl.h>   // For O_RDONLY, etc.
-#include <cerrno>    // For errno
+#include <fcntl.h>   // for O_RDONLY.
+#include <cerrno>    // for errno
 #include<fstream>
 #include <endian.h>
 #include <sys/types.h>
@@ -133,6 +133,7 @@ int runClient(std::string ip, int port,std::string password) {
     std::cout << "Request sent\n";
     return client;
 }
+//NMTS (Novus Message Transfer System)
 void sendMsg(std::string msg, int id) {
     SSL* ssl = (clients.count(id)) ? clients[id] : client_ssl;
     int msglength = msg.size();
@@ -181,8 +182,7 @@ std::string recvMsg(int id) {
     }
     return msg;
 }
-
-//NFTP
+//NFTP (Novus File Transfer Protocol)
 bool sendFile(std::string filepath, int id){
     SSL* ssl = (clients.count(id)) ? clients[id] : client_ssl;
     std::string filepathSTR = filepath;
