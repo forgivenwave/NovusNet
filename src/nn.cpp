@@ -143,12 +143,12 @@ void sendMsg(std::string msg, int id) {
     int result=0;
 
     result = SSL_write(ssl, &msglengthC, sizeof(msglengthC));
-    if (result < 0) {
+    if (result <= 0) {
         perror("send failed");
     }
     while (bytesL > 0) {
         result = SSL_write(ssl, msg.c_str() + bytesS, bytesL);
-        if (result < 0) {
+        if (result <= 0) {
             perror("send failed");
             break;
         }
@@ -162,7 +162,7 @@ std::string recvMsg(int id) {
     int result=0;
 
     result = SSL_read(ssl, &msgL_htonl, sizeof(msgL_htonl));
-    if (result < 0) {
+    if (result <= 0) {
         perror("recv failed");
         return "EXITED(C-178)";
     }
