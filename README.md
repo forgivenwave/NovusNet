@@ -66,8 +66,8 @@ int main(){
 }
 ```
 
- - These same snippets can be found at **src/client.cpp** and **src/server.cpp**
  - For a clearer example check [NovusChat](https://github.com/Nullora/NovusChat) as mentioned earlier, it's a much better way of understanding.
+ - Another great example is [NovusSync](https://github.com/Nullora/NovusSync), it's a file syncing project made to sync a file across 2 devices or more. It's not made for general use, you can clone it and modify it to fit your computer, but it's mainly made as an example project. It is hard coded for my computer, it wont work out the box. Don't rely on it too much, I use it to stress test NovusNet.
  # Installation
 - Just clone the repo with "git clone ..."
 - Copy the "include/nn.hpp" file into your own include file.
