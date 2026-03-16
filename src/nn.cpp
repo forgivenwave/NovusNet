@@ -121,11 +121,15 @@ int runClient(std::string ip, int port,std::string password) {
         return -1;
     }
     SSL_CTX* client_ctx = SSL_CTX_new(TLS_client_method());
-    SSL_CTX_set_verify(client_ctx, SSL_VERIFY_NONE, nullptr);
+    SSL_CTX_set_verify(client_ctx, SSL_VERIFY_PEER, nullptr);
+    SSL_CTX_load_verify_locations(client_ctx, "cert.pem", nullptr);
     SSL* ssl = SSL_new(client_ctx);
     SSL_set_fd(ssl, client);
     if (SSL_connect(ssl) <= 0) {
         ERR_print_errors_fp(stderr);
+        return -1;
+    }
+    if(SSL_get_verify_result(ssl) != X509_V_OK) {
         return -1;
     }
     client_ssl = ssl;
@@ -167,6 +171,7 @@ std::string recvMsg(int id) {
         return "EXITED(C-178)";
     }
     int msgL = ntohl(msgL_htonl);
+    if(msgL>4*1024*1024) return "EXITED(C-178)";
     int bytesR = 0;
     int bytesL = msgL;
     std::string msg(msgL, 0);   
@@ -175,7 +180,7 @@ std::string recvMsg(int id) {
         result = SSL_read(ssl, msg.data() + bytesR, bytesL);
         if (result <= 0) {
             perror("recv failed");
-            return "EXITED(C-1)";
+            return "EXITED(C-178)";
         }
         bytesR += result;
         bytesL -= result;
@@ -188,12 +193,11 @@ auto printProgress = [](uint64_t done, uint64_t total) {
     std::cout << "\r[";
     for (int i = 0; i < 20; i++)
         std::cout << (i < filled ? '#' : '-');
-    std::cout << "] " << percent << "%" << std::flush;
+    std::cout << "] " << percent << "% " << std::flush;
 };
 //NFTP (Novus File Transfer Protocol)
 bool sendFile(std::string filepath, int id){
     SSL* ssl = (clients.count(id)) ? clients[id] : client_ssl;
-    std::string filepathSTR = filepath;
     char buffer[16384];
     int fd = open(filepath.c_str(),O_RDONLY);
     if(fd<0) return false;
@@ -202,7 +206,7 @@ bool sendFile(std::string filepath, int id){
     uint64_t size = st.st_size;
     uint64_t netsize = htobe64(size);
     SSL_write(ssl,&netsize,sizeof(netsize));
-    std::string filename = filepathSTR.substr(filepathSTR.find_last_of("/\\") + 1);
+    std::string filename = filepath.substr(filepath.find_last_of("/\\") + 1);
     sendMsg(filename,id);
     uint64_t bytesL = size;
     uint64_t bytesS = 0;
@@ -227,11 +231,13 @@ bool recvFile(std::string folderpath, int id){
         return false;
     }
     uint64_t filesize =  be64toh(netsize);
+    if(filesize>10ULL*1024*1024*1024) return false;
     std::string filename = recvMsg(id);
+    if(filename.empty() || filename.size() > 255) return false;
+    if(filename.find('/') != std::string::npos) return false;
     uint64_t bytesL = filesize;
     uint64_t bytesR = 0;
-    int s=0;
-    int result=0;
+    int result;
     std::string fullpath = folderpath + "/" + filename;
     int outfd = open(fullpath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if(outfd < 0) return false;
