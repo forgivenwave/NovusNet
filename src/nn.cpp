@@ -171,7 +171,7 @@ std::string recvMsg(int id) {
         return "EXITED(C-178)";
     }
     int msgL = ntohl(msgL_htonl);
-    if(msgL>4*1024*1024) return "EXITED(C-178)";
+    if(msgL>4*1024*1024 || msgL<=0) return "EXITED(C-178)";
     int bytesR = 0;
     int bytesL = msgL;
     std::string msg(msgL, 0);   
@@ -231,7 +231,7 @@ bool recvFile(std::string folderpath, int id){
         return false;
     }
     uint64_t filesize =  be64toh(netsize);
-    if(filesize>10ULL*1024*1024*1024) return false;
+    if(filesize>10ULL*1024*1024*1024 || filesize<=0) return false;
     std::string filename = recvMsg(id);
     if(filename.empty() || filename.size() > 255) return false;
     if(filename.find('/') != std::string::npos) return false;
