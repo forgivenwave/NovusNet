@@ -34,6 +34,15 @@ std::mutex clients_mutex;
 void onMessage(std::function<void(int, std::string)> callback){
     messageCallback = callback;
 }
+
+SSL* getSSL(int id) {
+    std::lock_guard<std::mutex> lock(clients_mutex);
+    auto it = clients.find(id);
+    if (it != clients.end()) return it->second;
+    return client_ssl; // Fallback for client-side
+}
+
+
 // spawns a background thread that accepts incoming connections.
 // each accepted client gets their own recv thread.
 void runServer(int port, std::string password) {
@@ -41,12 +50,17 @@ void runServer(int port, std::string password) {
     SSL_CTX* ctx = SSL_CTX_new(TLS_server_method());
     if (!SSL_CTX_use_certificate_file(ctx, "cert.pem", SSL_FILETYPE_PEM)) {
         ERR_print_errors_fp(stderr);
+        SSL_CTX_free(ctx);
+        return;
     }
     if (!SSL_CTX_use_PrivateKey_file(ctx, "key.pem", SSL_FILETYPE_PEM)) {
         ERR_print_errors_fp(stderr);
+        SSL_CTX_free(ctx);
+        return;
     }
     ssl_ctx = ctx;
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if(server_fd < 0){ perror("socket failed"); return; }
     int opt = 1;
     setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
@@ -55,48 +69,50 @@ void runServer(int port, std::string password) {
     addr.sin_addr.s_addr = INADDR_ANY;
     addr.sin_port = htons(port);
 
-    bind(server_fd, (sockaddr*)&addr, sizeof(addr));
-    listen(server_fd, 32);
+    int b = bind(server_fd, (sockaddr*)&addr, sizeof(addr));
+    if(b < 0){ perror("bind failed"); return; }
+    int l = listen(server_fd, 32);
+    if(l < 0){ perror("listen failed"); return; }
     std::cout << "Server on port " << port << "\n";
 
     std::thread([server_fd,password]() {
         while (true) {
             sockaddr_in client_addr{};
             socklen_t len = sizeof(client_addr);
-            // block until a new client connects
-            client_fd = accept(server_fd, (sockaddr*)&client_addr, &len);
-            if (client_fd < 0) continue;
+            int new_fd = accept(server_fd, (sockaddr*)&client_addr, &len);
+            if(new_fd < 0) continue;
             //wrap fd in ssl
             SSL* ssl = SSL_new(ssl_ctx);
-            SSL_set_fd(ssl, client_fd);
+            SSL_set_fd(ssl, new_fd);
             if (SSL_accept(ssl) <= 0) {
                 ERR_print_errors_fp(stderr);
+                SSL_free(ssl);
+                close(new_fd);
                 continue;
             }
             //check password (Access control)
             // register the new client
-            clients_index++;
+            int ci = ++clients_index;
             {
                 std::lock_guard<std::mutex> lock(clients_mutex);
-                clients[clients_index] = ssl;
+                clients[ci] = ssl;
             }
             //check password (Access control)
-            std::string recvdp = recvMsg(clients_index);
+            std::string recvdp = recvMsg(ci);
             if(recvdp!=password){
                 std::cout << "KICKED (wrong password): " << inet_ntoa(client_addr.sin_addr) << "\n";
                 {
                     std::lock_guard<std::mutex> lock(clients_mutex);
-                    SSL_shutdown(clients[clients_index]);
-                    SSL_free(clients[clients_index]);
-                    clients.erase(clients_index);
+                    SSL_shutdown(clients[ci]);
+                    SSL_free(clients[ci]);
+                    clients.erase(ci);
                 }
-                close(client_fd);
+                close(new_fd);
             }else{
                 std::cout << "CONNECTED: " << inet_ntoa(client_addr.sin_addr) << "\n";
-                sendMsg(std::to_string(clients_index),clients_index);
+                sendMsg(std::to_string(ci),ci);
                 // stabilize client_index to pass to thread
-                int new_ci = clients_index;
-                int new_fd = client_fd;
+                int new_ci = ci;
                 SSL* new_ssl = ssl;
                 std::thread([new_ci,new_ssl,new_fd]() {
                     while (true) {
@@ -121,30 +137,39 @@ void runServer(int port, std::string password) {
 }
 int runClient(std::string ip, int port,std::string password) {
     int client = socket(AF_INET, SOCK_STREAM, 0);
-
+    if(client<0){
+        perror("socket failed");
+        return -1;
+    }
     struct sockaddr_in serverAddress;
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(port);
     inet_pton(AF_INET, ip.c_str(), &serverAddress.sin_addr);
 
-    if (connect(client, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1) {
+    if(connect(client, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1){
         perror("connect failed");
+        close(client);
         return -1;
     }
     SSL_CTX* client_ctx = SSL_CTX_new(TLS_client_method());
     SSL_CTX_set_verify(client_ctx, SSL_VERIFY_PEER, nullptr);
     SSL_CTX_load_verify_locations(client_ctx, "cert.pem", nullptr);
     SSL* ssl = SSL_new(client_ctx);
+    SSL_CTX_free(client_ctx);
     SSL_set_fd(ssl, client);
     if (SSL_connect(ssl) <= 0) {
         ERR_print_errors_fp(stderr);
+        SSL_free(ssl);
+        close(client);
         return -1;
     }
     if(SSL_get_verify_result(ssl) != X509_V_OK) {
+        SSL_free(ssl);
+        close(client);
         return -1;
     }
     client_ssl = ssl;
-    sendMsg(password,client);
+    sendMsg(password,0);
     std::cout << "Request sent\n";
     return client;
 }
@@ -229,29 +254,42 @@ auto printProgress = [](uint64_t done, uint64_t total) {
     std::cout << "] " << percent << "% " << std::flush;
 };
 //NFTP (Novus File Transfer Protocol)
-bool sendFile(std::string filepath, int id){
-    SSL* ssl = (clients.count(id)) ? clients[id] : client_ssl;
-    char buffer[16384];
-    int fd = open(filepath.c_str(),O_RDONLY);
-    if(fd<0) return false;
+bool sendFile(std::string filepath, int id) {
+    SSL* ssl = getSSL(id);
+    if (!ssl) return false;
+
+    int fd = open(filepath.c_str(), O_RDONLY);
+    if (fd < 0) return false;
+
     struct stat st;
-    fstat(fd,&st);
+    fstat(fd, &st);
     uint64_t size = st.st_size;
     uint64_t netsize = htobe64(size);
-    SSL_write(ssl,&netsize,sizeof(netsize));
+    
+    // Header: Size
+    if (SSL_write(ssl, &netsize, sizeof(netsize)) <= 0) return false;
+
+    // Header: Name
     std::string filename = filepath.substr(filepath.find_last_of("/\\") + 1);
-    sendMsg(filename,id);
-    uint64_t bytesL = size;
-    uint64_t bytesS = 0;
-    int s=0;
-    int result=0;
-    while(bytesL>0){
-        result = read(fd,buffer,sizeof(buffer));
-        if(result<=0) return false;
-        s = SSL_write(ssl,buffer,result);
-        bytesS += s;
-        bytesL -= s;
-        printProgress(bytesS,size);
+    if (!sendMsg(filename, id)) return false;
+
+    char buffer[16384];
+    uint64_t totalSent = 0;
+    while (totalSent < size) {
+        ssize_t bytesRead = read(fd, buffer, sizeof(buffer));
+        if (bytesRead <= 0) break;
+
+        int offset = 0;
+        while (offset < bytesRead) {
+            int sent = SSL_write(ssl, buffer + offset, bytesRead - offset);
+            if (sent <= 0) {
+                close(fd);
+                return false;
+            }
+            offset += sent;
+            totalSent += sent;
+        }
+        printProgress(totalSent, size);
     }
     close(fd);
     return true;
