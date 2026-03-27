@@ -15,8 +15,8 @@ void onMessage(std::function<void(int, std::string)> callback);
 void runServer(int port, std::string password);
 int runClient(std::string ip, int port,std::string password);
 
-//After connection
-void sendMsg(std::string msg, int id);
+//NMTS
+bool sendMsg(std::string msg, int id);
 std::string recvMsg(int id);
 
 //NFTP

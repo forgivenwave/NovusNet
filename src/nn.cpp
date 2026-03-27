@@ -149,7 +149,7 @@ int runClient(std::string ip, int port,std::string password) {
     return client;
 }
 //NMTS (Novus Message Transfer System)
-void sendMsg(std::string msg, int id) {
+bool sendMsg(std::string msg, int id) {
     SSL* ssl;
     {
         std::lock_guard<std::mutex> lock(clients_mutex);
@@ -161,19 +161,27 @@ void sendMsg(std::string msg, int id) {
     int bytesS = 0;
     int result=0;
 
-    result = SSL_write(ssl, &msglengthC, sizeof(msglengthC));
-    if (result <= 0) {
-        perror("send failed");
+    int headerL = sizeof(msglengthC);
+    int headerS = 0;
+    while(headerL > 0){
+        result = SSL_write(ssl, (char*)&msglengthC + headerS, headerL);
+        if(result <= 0){
+            perror("send failed");
+            return false;
+        }
+        headerS += result;
+        headerL -= result;
     }
     while (bytesL > 0) {
         result = SSL_write(ssl, msg.c_str() + bytesS, bytesL);
         if (result <= 0) {
             perror("send failed");
-            break;
+            return false;
         }
         bytesS += result;
         bytesL -= result;
     }
+    return true;
 }
 std::string recvMsg(int id) {
     SSL* ssl;
@@ -184,10 +192,16 @@ std::string recvMsg(int id) {
     uint32_t msgL_htonl;
     int result=0;
 
-    result = SSL_read(ssl, &msgL_htonl, sizeof(msgL_htonl));
-    if (result <= 0) {
-        perror("recv failed");
-        return "EXITED(C-178)";
+    int headerL = sizeof(msgL_htonl);
+    int headerR = 0;
+    while(headerL > 0){
+        result = SSL_read(ssl, (char*)&msgL_htonl + headerR, headerL);
+        if(result <= 0){
+            perror("recv failed");
+            return "EXITED(C-178)";
+        }
+        headerR += result;
+        headerL -= result;
     }
     int msgL = ntohl(msgL_htonl);
     if(msgL>4*1024*1024 || msgL<=0) return "EXITED(C-178)";
@@ -239,6 +253,7 @@ bool sendFile(std::string filepath, int id){
         bytesL -= s;
         printProgress(bytesS,size);
     }
+    close(fd);
     return true;
 }
 bool recvFile(std::string folderpath, int id){

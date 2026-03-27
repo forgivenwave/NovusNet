@@ -4,6 +4,8 @@
 int main(){
     std::string msg;
     runServer(9090,"PassTest");
+
+    
     //this part stops it from reaching the "return 0" line.
     //the timer is so it does not eat up CPU power
     while(true){
