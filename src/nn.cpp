@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 #include <mutex>
 #include <atomic>
+#include<memory>
 
 
 std::map<int, SSL*> clients;
