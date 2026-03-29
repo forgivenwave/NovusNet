@@ -4,6 +4,11 @@
 # NovusNet
 Ever manually set up a project that required networking on your own? You know how hard it is, thats why i'm introducing NovusNet. NN gets a server and client talking in less than 10 lines of code. Built for indie devs, beginners, and anyone who's project doesn't need the overkill and complexity that larger libraries like Boost.Asio bring. Fully encrypted communication between server and clients.
 Now featuring NFTP (Novus File Transfer Protocol); send and receive files of any size with a single function call. Scroll down to updates for more.
+
+# Contributors
+- [Nullora](https://github.com/Nullora) (Owner)
+- [intellectualtheft](https://github.com/intellectualtheft) (Contributor)
+
 # WARNING
 - As this is an ongoing project, scroll down to "Updates" to keep up to date, syntax may change in a short period.
 - This is still in super early development, expect occasional bugs, and make sure to report said bugs to me.
