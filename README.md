@@ -7,7 +7,7 @@ Now featuring NFTP (Novus File Transfer Protocol); send and receive files of any
 
 # Contributors
 - [Nullora](https://github.com/Nullora) (Owner)
-- [intellectualtheft](https://github.com/intellectualtheft) (Contributor)
+- [intellectualtheft](https://github.com/intellectualtheft) (Coder)
 
 # WARNING
 - As this is an ongoing project, scroll down to "Updates" to keep up to date, syntax may change in a short period.
